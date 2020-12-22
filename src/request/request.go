@@ -78,14 +78,15 @@ func loginHanler(w http.ResponseWriter, r *http.Request) {
 	rows, err := db.Query("select user_mail,user_pass from user_info where user_mail=? and user_pass=?", n.Email, n.PassWord)
 	checkErr(err)
 
-	var b bool
-	b = rows.Next()
-	if !b {
+	var data bool
+	data = rows.Next()
+	//数据库返回参数为空时进入
+	if !data {
 		fmt.Println("入参:", n.Email, n.PassWord, "数据库:")
 		fmt.Fprintf(w, `{"code":0}`)
 	}
-
-	for b {
+	//数据库返回参数不为空时进入
+	for data {
 		var user_mail string
 		var user_pass string
 		err = rows.Scan(&user_mail, &user_pass)
@@ -95,11 +96,9 @@ func loginHanler(w http.ResponseWriter, r *http.Request) {
 			Email:    user_mail,
 			PassWord: user_pass,
 		}
-		// if person.PassWord == n.PassWord {
 		fmt.Println("入参:", n.Email, n.PassWord, "数据库", person.Email, person.PassWord)
 		fmt.Fprintf(w, `{"code":1}`)
-		// }
-		b = rows.Next()
+		data = rows.Next()
 	}
 }
 
