@@ -124,25 +124,48 @@ func AddHanler(w http.ResponseWriter, r *http.Request) {
 	err := json.Unmarshal(body, &n)
 	checkErr(err)
 	fmt.Println(n.Username, n.PassWord, n.Email, n.Phone)
+
+	//查询邮箱是否重复
 	//打开数据库操作
 	db, err := sql.Open("mysql", "hospitalTest:Liangjian123360@8899@tcp(192.168.50.57:3306)/flutter_app")
 	checkErr(err)
 	defer db.Close()
-	//插入数据
-	stmt, err := db.Prepare("INSERT user_info SET user_name=?,user_pass=?,user_mail=?,user_phone=?")
+	rows, err := db.Query("select user_mail from user_info where user_mail=?", n.Email)
 	checkErr(err)
-	res, err := stmt.Exec(n.Username, n.PassWord, n.Email, n.Phone)
-	checkErr(err)
-	id, err := res.LastInsertId()
-	checkErr(err)
-	fmt.Println("Last InsertId :", id)
-	m := Message{
-		Message: "Insert Success!",
+
+	var data bool
+	data = rows.Next()
+	//数据库返回参数为空时进入
+	if !data {
+		fmt.Println("入参:", n.Email, "数据库:")
+		fmt.Fprintf(w, `{"code":1}`)
+
+		update, err := sql.Open("mysql", "hospitalTest:Liangjian123360@8899@tcp(192.168.50.57:3306)/flutter_app")
+		checkErr(err)
+		defer db.Close()
+		//插入数据
+		stmt, err := update.Prepare("INSERT user_info SET user_name=?,user_pass=?,user_mail=?,user_phone=?")
+		checkErr(err)
+		res, err := stmt.Exec(n.Username, n.PassWord, n.Email, n.Phone)
+		checkErr(err)
+		num, err := res.RowsAffected()
+		checkErr(err)
+		fmt.Println("受影响行数:", num)
+
 	}
-	b, err := json.Marshal(m)
-	checkErr(err)
-	fmt.Fprintf(w, string(b))
-	//fmt.Fprintln(w,"insert success!")
+	//数据库返回参数不为空时进入
+	for data {
+		var user_mail string
+		err = rows.Scan(&user_mail)
+		checkErr(err)
+		//将这一步改成JSON字符串传输至前面页面
+		person := Person{
+			Email: user_mail,
+		}
+		fmt.Println("入参:", n.Email, "数据库", person.Email)
+		fmt.Fprintf(w, `{"code":0}`)
+		data = rows.Next()
+	}
 
 }
 
