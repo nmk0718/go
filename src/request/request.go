@@ -59,6 +59,50 @@ func searchHanler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func loginHanler(w http.ResponseWriter, r *http.Request) {
+
+	//获取请求报文的内容长度
+	len := r.ContentLength
+	//新建一个字节切片，长度与请求报文的内容长度相同
+	body := make([]byte, len)
+	//读取r的请求主体，并将具体内容读入body中
+	r.Body.Read(body)
+	var n Gonote
+	err := json.Unmarshal(body, &n)
+	checkErr(err)
+	fmt.Println(n.Email, n.PassWord)
+	//打开数据库操作
+	db, err := sql.Open("mysql", "hospitalTest:Liangjian123360@8899@tcp(192.168.50.57:3306)/flutter_app")
+	checkErr(err)
+	defer db.Close()
+	rows, err := db.Query("select user_mail,user_pass from user_info where user_mail=? and user_pass=?", n.Email, n.PassWord)
+	checkErr(err)
+
+	var b bool
+	b = rows.Next()
+	if !b {
+		fmt.Println("入参:", n.Email, n.PassWord, "数据库:")
+		fmt.Fprintf(w, `{"code":0}`)
+	}
+
+	for b {
+		var user_mail string
+		var user_pass string
+		err = rows.Scan(&user_mail, &user_pass)
+		checkErr(err)
+		//将这一步改成JSON字符串传输至前面页面
+		person := Person{
+			Email:    user_mail,
+			PassWord: user_pass,
+		}
+		// if person.PassWord == n.PassWord {
+		fmt.Println("入参:", n.Email, n.PassWord, "数据库", person.Email, person.PassWord)
+		fmt.Fprintf(w, `{"code":1}`)
+		// }
+		b = rows.Next()
+	}
+}
+
 type Gonote struct {
 	Username string
 	PassWord string
@@ -186,6 +230,7 @@ func DeleteHanler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	//mux :=http.NewServeMux()
 	http.HandleFunc("/search", searchHanler)
+	http.HandleFunc("/login", loginHanler)
 	http.HandleFunc("/Add", AddHanler)
 	http.HandleFunc("/Modify", ModifyHanler)
 	http.HandleFunc("/Delete", DeleteHanler)
