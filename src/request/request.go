@@ -249,6 +249,45 @@ func DeleteHanler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+type Tagore struct {
+	Title       string
+	Author      string
+	Description string
+	ImageUrl    string
+}
+
+type Tagoreslic struct {
+	Tagores []Tagore
+}
+
+func TagoreHanler(w http.ResponseWriter, r *http.Request) {
+	var t Tagoreslic
+	r.ParseForm() //解析
+	fmt.Println(r.Form)
+	//打开数据库操作
+	db, err := sql.Open("mysql", "hospitalTest:Liangjian123360@8899@tcp(192.168.50.57:3306)/flutter_app")
+	checkErr(err)
+	defer db.Close()
+	rows, err := db.Query("select title,author,description,imageUrl from Tagore;")
+	checkErr(err)
+	for rows.Next() {
+		var title string
+		var author string
+		var description string
+		var imageUrl string
+		err = rows.Scan(&title, &author, &description, &imageUrl)
+		checkErr(err)
+		//将这一步改成JSON字符串传输至前面页面
+
+		t.Tagores = append(t.Tagores, Tagore{Title: title, Author: author, Description: description, ImageUrl: imageUrl})
+		// fmt.Println(t.Tagores)
+	}
+	b, err := json.Marshal(t)
+	checkErr(err)
+	fmt.Fprintf(w, string(b))
+
+}
+
 func main() {
 	//mux :=http.NewServeMux()
 	http.HandleFunc("/search", searchHanler)
@@ -256,6 +295,7 @@ func main() {
 	http.HandleFunc("/Add", AddHanler)
 	http.HandleFunc("/Modify", ModifyHanler)
 	http.HandleFunc("/Delete", DeleteHanler)
+	http.HandleFunc("/Tagore", TagoreHanler)
 	err := http.ListenAndServe(":9090", nil)
 	if err != nil {
 		log.Fatal("panic occur:", err)
