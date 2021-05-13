@@ -28,7 +28,7 @@ func searchHanler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()       //解析
 	fmt.Println(r.Form) //输出到服务器端的打印信息,map类型   type Values map[string][]string
 	//打开数据库操作
-	db, err := sql.Open("mysql", "hospitalTest:Liangjian123360@8899@tcp(192.168.50.57:3306)/flutter_app")
+	db, err := sql.Open("mysql", "root:zy@2021@tcp(121.4.147.189:3306)/flutter_app")
 	checkErr(err)
 	defer db.Close()
 	for _, v := range r.Form {
@@ -72,7 +72,7 @@ func loginHanler(w http.ResponseWriter, r *http.Request) {
 	checkErr(err)
 	fmt.Println(n.Email, n.PassWord)
 	//打开数据库操作
-	db, err := sql.Open("mysql", "hospitalTest:Liangjian123360@8899@tcp(192.168.50.57:3306)/flutter_app")
+	db, err := sql.Open("mysql", "root:zy@2021@tcp(121.4.147.189:3306)/flutter_app")
 	checkErr(err)
 	defer db.Close()
 	rows, err := db.Query("select user_mail,user_pass from user_info where user_mail=? and user_pass=?", n.Email, n.PassWord)
@@ -127,7 +127,7 @@ func AddHanler(w http.ResponseWriter, r *http.Request) {
 
 	//查询邮箱是否重复
 	//打开数据库操作
-	db, err := sql.Open("mysql", "hospitalTest:Liangjian123360@8899@tcp(192.168.50.57:3306)/flutter_app")
+	db, err := sql.Open("mysql", "root:zy@2021@tcp(121.4.147.189:3306)/flutter_app")
 	checkErr(err)
 	defer db.Close()
 	rows, err := db.Query("select user_mail from user_info where user_mail=?", n.Email)
@@ -140,7 +140,7 @@ func AddHanler(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("入参:", n.Email, "数据库:")
 		fmt.Fprintf(w, `{"code":1}`)
 
-		update, err := sql.Open("mysql", "hospitalTest:Liangjian123360@8899@tcp(192.168.50.57:3306)/flutter_app")
+		update, err := sql.Open("mysql", "root:zy@2021@tcp(121.4.147.189:3306)/flutter_app")
 		checkErr(err)
 		defer db.Close()
 		//插入数据
@@ -186,7 +186,7 @@ func ModifyHanler(w http.ResponseWriter, r *http.Request) {
 	checkErr(err)
 	fmt.Println(nm.UserId, nm.Username)
 	//打开数据库操作
-	db, err := sql.Open("mysql", "hospitalTest:Liangjian123360@8899@tcp(192.168.50.57:3306)/flutter_app")
+	db, err := sql.Open("mysql", "root:zy@2021@tcp(121.4.147.189:3306)/flutter_app")
 	checkErr(err)
 	defer db.Close()
 
@@ -211,7 +211,7 @@ func DeleteHanler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()       //解析
 	fmt.Println(r.Form) //输出到服务器端的打印信息,map类型   type Values map[string][]string
 	//打开数据库操作
-	db, err := sql.Open("mysql", "hospitalTest:Liangjian123360@8899@tcp(192.168.50.57:3306)/flutter_app")
+	db, err := sql.Open("mysql", "root:zy@2021@tcp(121.4.147.189:3306)/flutter_app")
 	checkErr(err)
 	defer db.Close()
 	for _, v := range r.Form {
@@ -265,7 +265,7 @@ func TagoreHanler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm() //解析
 	fmt.Println(r.Form)
 	//打开数据库操作
-	db, err := sql.Open("mysql", "hospitalTest:Liangjian123360@8899@tcp(192.168.50.57:3306)/flutter_app")
+	db, err := sql.Open("mysql", "root:zy@2021@tcp(121.4.147.189:3306)/flutter_app")
 	checkErr(err)
 	defer db.Close()
 	rows, err := db.Query("select title,author,description,imageUrl from Tagore;")
