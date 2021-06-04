@@ -261,9 +261,13 @@ type Tagoreslic struct {
 }
 
 func TagoreHanler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*") //允许访问所有域
+	w.Header().Add("Access-Control-Allow-Headers", "Content-Type") //header的类型
+	w.Header().Add("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE") //允许的请求类型
+	w.Header().Set("content-type", "application/json;charset=UTF-8") //返回数据格式是json
 	var t Tagoreslic
 	r.ParseForm() //解析
-	fmt.Println(r.Form)
+	// print(r.Email,r.PassWord)
 	//打开数据库操作
 	db, err := sql.Open("mysql", "root:zy@2021@tcp(121.4.147.189:3306)/flutter_app")
 	checkErr(err)

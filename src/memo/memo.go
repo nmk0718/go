@@ -26,10 +26,12 @@ type Gonote struct {
 	PassWord string
 	Email    string
 }
-type Person struct {
-	Email    string
-}
 func UserRegisterHanler(w http.ResponseWriter, r *http.Request) {
+
+	w.Header().Set("Access-Control-Allow-Origin", "*") //允许访问所有域
+	w.Header().Add("Access-Control-Allow-Headers", "Content-Type") //header的类型
+	w.Header().Add("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE") //允许的请求类型
+	w.Header().Set("content-type", "application/json;charset=UTF-8") //返回数据格式是json
 	//获取请求报文的内容长度
 	len := r.ContentLength
 	//新建一个字节切片，长度与请求报文的内容长度相同
@@ -52,8 +54,8 @@ func UserRegisterHanler(w http.ResponseWriter, r *http.Request) {
 	var data bool
 	data = rows.Next()
 	//数据库返回参数为空时进入
+	//邮箱未注册返回code为1
 	if !data {
-		fmt.Println("入参:", n.Email, "数据库:")
 		fmt.Fprintf(w, `{"code":1}`)
 
 		update, err := sql.Open("mysql", "root:zy@2021@tcp(121.4.147.189:3306)/flutter_app")
@@ -67,18 +69,14 @@ func UserRegisterHanler(w http.ResponseWriter, r *http.Request) {
 		num, err := res.RowsAffected()
 		checkErr(err)
 		fmt.Println("受影响行数:", num)
-
 	}
 	//数据库返回参数不为空时进入
+	//邮箱已经注册,返回code为0
 	for data {
 		var user_mail string
 		err = rows.Scan(&user_mail)
 		checkErr(err)
 		//将这一步改成JSON字符串传输至前面页面
-		person := Person{
-			Email: user_mail,
-		}
-		fmt.Println("入参:", n.Email, "数据库", person.Email)
 		fmt.Fprintf(w, `{"code":0}`)
 		data = rows.Next()
 	}
@@ -94,10 +92,17 @@ type UserID struct{
 	User_id int
 }
 func UserLoginHanler(w http.ResponseWriter, r *http.Request) {
-
-	// var t Userlic
+	
+	w.Header().Set("Access-Control-Allow-Origin", "*") //允许访问所有域
+	w.Header().Add("Access-Control-Allow-Headers", "Content-Type") //header的类型
+	w.Header().Add("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE") //允许的请求类型
+	w.Header().Set("content-type", "application/json;charset=UTF-8") //返回数据格式是json
 	//获取请求报文的内容长度
 	len := r.ContentLength
+	if(len < 1){
+		fmt.Println(len)
+		fmt.Println("当前为空")
+	}
 	//新建一个字节切片，长度与请求报文的内容长度相同
 	body := make([]byte, len)
 	//读取r的请求主体，并将具体内容读入body中
@@ -105,7 +110,6 @@ func UserLoginHanler(w http.ResponseWriter, r *http.Request) {
 	var n Login
 	err := json.Unmarshal(body, &n)
 	checkErr(err)
-	// fmt.Println(n.Email, n.PassWord)
 	//打开数据库操作
 	db, err := sql.Open("mysql", "root:zy@2021@tcp(121.4.147.189:3306)/flutter_app")
 	checkErr(err)
@@ -117,7 +121,6 @@ func UserLoginHanler(w http.ResponseWriter, r *http.Request) {
 	data = rows.Next()
 	//数据库返回参数为空时进入
 	if !data {
-		// fmt.Println("入参:", n.Email, n.PassWord, "数据库:")
 		fmt.Fprintf(w, `{"user_id":0}`)
 	}
 	//数据库返回参数不为空时进入
@@ -144,6 +147,10 @@ type Memo struct {
 	Time      string
 }
 func AddMemoHanler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*") //允许访问所有域
+	w.Header().Add("Access-Control-Allow-Headers", "Content-Type") //header的类型
+	w.Header().Add("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE") //允许的请求类型
+	w.Header().Set("content-type", "application/json;charset=UTF-8") //返回数据格式是json
 	//获取请求报文的内容长度
 	len := r.ContentLength
 	//新建一个字节切片，长度与请求报文的内容长度相同
@@ -164,38 +171,11 @@ func AddMemoHanler(w http.ResponseWriter, r *http.Request) {
 	num, err := res.RowsAffected()
 	checkErr(err)
 	fmt.Println("受影响行数:", num)
-	fmt.Fprintf(w, `{"code":1}`)
-
-}
-
-//------------------用户查询Memo接口-----------------------------
-
-func SearchMemoHanler(w http.ResponseWriter, r *http.Request) {
-	var t Memolic
-	r.ParseForm() //解析
-	// fmt.Println(r.Form)
-	//打开数据库操作
-	db, err := sql.Open("mysql", "root:zy@2021@tcp(121.4.147.189:3306)/flutter_app")
-	checkErr(err)
-	defer db.Close()
-	rows, err := db.Query("select user_id,memo,time from memo;")
-	checkErr(err)
-	for rows.Next() {
-		var user_id int
-		var memo string
-		var time string
-		err = rows.Scan(&user_id,&memo, &time)
-		checkErr(err)
-		//将这一步改成JSON字符串传输至前面页面
-
-		t.Memos = append(t.Memos, Memo{User_id: user_id,Memo: memo, Time: time})
+	if num != 0 {
+		fmt.Fprintf(w, `{"code":1}`)
+	} else {
+		fmt.Fprintf(w, `{"code":0}`)
 	}
-	b, err := json.Marshal(t)
-	//{"Memos":[{"我","Time":"2021-04-15 18:23:39"},{"Memo":"你","Time":"2021-04-16 09:25:33"}]}
-	//	b, err := json.Marshal(t.Memos)
-	//[{"Memo":"我","Time":"2021-04-15 18:23:39"},{"Memo":"你","Time":"2021-04-16 09:25:33"}]
-	checkErr(err)
-	fmt.Fprintf(w, string(b))
 
 }
 
@@ -205,14 +185,16 @@ type Message struct {
 	Message string
 }
 func DeleteMemoHanler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*") //允许访问所有域
+	w.Header().Add("Access-Control-Allow-Headers", "Content-Type") //header的类型
+	w.Header().Add("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE") //允许的请求类型
+	w.Header().Set("content-type", "application/json;charset=UTF-8") //返回数据格式是json
 	r.ParseForm()       //解析
-	// fmt.Println(r.Form) //输出到服务器端的打印信息,map类型   type Values map[string][]string
 	//打开数据库操作
 	db, err := sql.Open("mysql", "root:zy@2021@tcp(121.4.147.189:3306)/flutter_app")
 	checkErr(err)
 	defer db.Close()
 	for _, v := range r.Form {
-		//fmt.Println("val:",strings.Join(v,""))
 		//删除数据
 		for i := 0; i < len(v); i++ {
 			delete_query := "delete from memo where id=?"
@@ -223,26 +205,105 @@ func DeleteMemoHanler(w http.ResponseWriter, r *http.Request) {
 			checkErr(err)
 			affect, err := res.RowsAffected()
 			checkErr(err)
-			// fmt.Println("affect rows:", affect)
+			fmt.Println("affect rows:", affect)
 			if affect != 0 {
-				m := Message{
-					Message: "Delete Success!",
-				}
-				b, err := json.Marshal(m)
-				checkErr(err)
-				fmt.Fprintf(w, string(b))
-				//fmt.Fprintln(w,"Delete success! ")
+				fmt.Fprintf(w, `{"code":1}`)
 			} else {
-				m := Message{
-					Message: "The id not exist!",
-				}
-				b, err := json.Marshal(m)
-				checkErr(err)
-				fmt.Fprintf(w, string(b))
-				//fmt.Fprintf(w,"The id not exist!")
+				fmt.Fprintf(w, `{"code":0}`)
 			}
 		}
 	}
+
+}
+
+//------------------用户修改Memo接口-----------------------------
+
+type UpdateMemo struct {
+	Id	  int
+	Memo      string
+	Time      string
+}
+
+func UpdateMemoHanler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*") //允许访问所有域
+	w.Header().Add("Access-Control-Allow-Headers", "Content-Type") //header的类型
+	w.Header().Add("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE") //允许的请求类型
+	w.Header().Set("content-type", "application/json;charset=UTF-8") //返回数据格式是json
+	//获取请求报文的内容长度
+	len := r.ContentLength
+	//新建一个字节切片，长度与请求报文的内容长度相同
+	body := make([]byte, len)
+	//读取r的请求主体，并将具体内容读入body中
+	r.Body.Read(body)
+	var n UpdateMemo
+	err := json.Unmarshal(body, &n)
+	checkErr(err)
+	fmt.Println(n.Id, n.Memo,n.Time)
+	//打开数据库操作
+	db, err := sql.Open("mysql", "root:zy@2021@tcp(121.4.147.189:3306)/flutter_app")
+	checkErr(err)
+	defer db.Close()
+
+	//更新数据
+	stmt, err := db.Prepare("UPDATE memo SET memo=?,time=? where id=?")
+	checkErr(err)
+	res, err := stmt.Exec(n.Memo, n.Time,n.Id)
+	checkErr(err)
+	affect, err := res.RowsAffected()
+	checkErr(err)
+	fmt.Println("Affect rows :", affect)
+	if affect != 0 {
+		fmt.Fprintf(w, `{"code":1}`)
+	} else {
+		fmt.Fprintf(w, `{"code":0}`)
+	}
+}
+
+
+//------------------用户查询Memo接口-----------------------------
+
+type Search struct {
+	ID   int
+	Memo string
+	Time string
+}
+type Searchlic struct {
+	Searchs []Search
+}
+func SearchMemoHanler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*") //允许访问所有域
+	w.Header().Add("Access-Control-Allow-Headers", "Content-Type") //header的类型
+	w.Header().Add("Access-Control-Allow-Methods", "POST,GET,OPTIONS,PUT,DELETE") //允许的请求类型
+	w.Header().Set("content-type", "application/json;charset=UTF-8") //返回数据格式是json
+	var t Searchlic
+	//获取请求报文的内容长度
+	len := r.ContentLength
+	//新建一个字节切片，长度与请求报文的内容长度相同
+	body := make([]byte, len)
+	//读取r的请求主体，并将具体内容读入body中
+	r.Body.Read(body)
+	var n UserID
+	err := json.Unmarshal(body, &n)
+	checkErr(err)
+	//打开数据库操作
+	db, err := sql.Open("mysql", "root:zy@2021@tcp(121.4.147.189:3306)/flutter_app")
+	checkErr(err)
+	defer db.Close()
+	rows, err := db.Query("select id,memo,time from memo where user_id=?",n.User_id)
+	checkErr(err)
+	for rows.Next() {
+		var id 	 int
+		var memo string
+		var time string
+		err = rows.Scan(&id,&memo, &time)
+		checkErr(err)
+		//将这一步改成JSON字符串传输至前面页面
+
+		t.Searchs = append(t.Searchs, Search{ID: id, Memo: memo, Time: time})
+	}
+	b, err := json.Marshal(t)
+	checkErr(err)
+	fmt.Fprintf(w, string(b))
 
 }
 
@@ -251,9 +312,10 @@ func DeleteMemoHanler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	http.HandleFunc("/UserRegister", UserRegisterHanler)
 	http.HandleFunc("/UserLogin", UserLoginHanler)
-	http.HandleFunc("/SearchMemo", SearchMemoHanler)
 	http.HandleFunc("/AddMemo", AddMemoHanler)
 	http.HandleFunc("/DeleteMemo", DeleteMemoHanler)
+	http.HandleFunc("/UpdateMemo", UpdateMemoHanler)
+	http.HandleFunc("/SearchMemo", SearchMemoHanler)
 	err := http.ListenAndServe(":9090", nil)
 	if err != nil {
 		log.Fatal("panic occur:", err)
